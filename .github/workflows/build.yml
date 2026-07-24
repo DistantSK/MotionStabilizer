@@ -69,20 +69,28 @@ jobs:
           --configuration Release
           --runtime win-x64
           --self-contained true
-          --output artifacts/MotionStabilizer-v${{ steps.metadata.outputs.version }}-win-x64
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:DebugType=None
+          -p:DebugSymbols=false
+          --output artifacts/publish
 
-      - name: Create ZIP
+      - name: Prepare release files
         shell: pwsh
-        run: >-
-          Compress-Archive
-          -Path artifacts/MotionStabilizer-v${{ steps.metadata.outputs.version }}-win-x64/*
-          -DestinationPath artifacts/MotionStabilizer-v${{ steps.metadata.outputs.version }}-win-x64.zip
+        run: |
+          $versionedExe = "artifacts/MotionStabilizer-v${{ steps.metadata.outputs.version }}-win-x64.exe"
+          Move-Item artifacts/publish/MotionStabilizer.exe $versionedExe
+          Compress-Archive `
+            -LiteralPath $versionedExe `
+            -DestinationPath "artifacts/MotionStabilizer-v${{ steps.metadata.outputs.version }}-win-x64.zip"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: MotionStabilizer-v${{ steps.metadata.outputs.version }}-win-x64
-          path: artifacts/MotionStabilizer-v${{ steps.metadata.outputs.version }}-win-x64.zip
+          path: |
+            artifacts/MotionStabilizer-v${{ steps.metadata.outputs.version }}-win-x64.exe
+            artifacts/MotionStabilizer-v${{ steps.metadata.outputs.version }}-win-x64.zip
           if-no-files-found: error
 
       - name: Publish GitHub Release
@@ -105,6 +113,7 @@ jobs:
             }
           }
           gh release upload $env:RELEASE_TAG `
+            "artifacts/MotionStabilizer-v$env:PACKAGE_VERSION-win-x64.exe" `
             "artifacts/MotionStabilizer-v$env:PACKAGE_VERSION-win-x64.zip" `
             --repo $env:GITHUB_REPOSITORY `
             --clobber
