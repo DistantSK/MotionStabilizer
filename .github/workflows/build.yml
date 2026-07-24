@@ -1,13 +1,20 @@
-name: Build
+name: Build and Release
 
 on:
   push:
     branches:
       - main
+    tags:
+      - "v*"
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing version tag to publish, for example v1.5.0
+        required: false
+        type: string
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -17,11 +24,38 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
 
       - name: Set up .NET 8
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+
+      - name: Resolve package metadata
+        id: metadata
+        shell: pwsh
+        env:
+          EVENT_REF_TYPE: ${{ github.ref_type }}
+          EVENT_REF_NAME: ${{ github.ref_name }}
+          REQUESTED_TAG: ${{ inputs.release_tag }}
+        run: |
+          $project = [xml](Get-Content MotionStabilizer/MotionStabilizer.csproj)
+          $projectVersion = $project.Project.PropertyGroup.Version
+          $releaseTag = if ($env:EVENT_REF_TYPE -eq "tag") {
+            $env:EVENT_REF_NAME
+          } elseif ($env:REQUESTED_TAG) {
+            $env:REQUESTED_TAG
+          } else {
+            ""
+          }
+          $packageVersion = if ($releaseTag) {
+            $releaseTag -replace "^v", ""
+          } else {
+            $projectVersion
+          }
+          "release_tag=$releaseTag" >> $env:GITHUB_OUTPUT
+          "version=$packageVersion" >> $env:GITHUB_OUTPUT
 
       - name: Restore
         run: dotnet restore MotionStabilizer/MotionStabilizer.csproj
@@ -35,15 +69,43 @@ jobs:
           --configuration Release
           --runtime win-x64
           --self-contained true
-          --output artifacts/MotionStabilizer-v1.5.0-win-x64
+          --output artifacts/MotionStabilizer-v${{ steps.metadata.outputs.version }}-win-x64
 
       - name: Create ZIP
         shell: pwsh
-        run: Compress-Archive -Path artifacts/MotionStabilizer-v1.5.0-win-x64/* -DestinationPath artifacts/MotionStabilizer-v1.5.0-win-x64.zip
+        run: >-
+          Compress-Archive
+          -Path artifacts/MotionStabilizer-v${{ steps.metadata.outputs.version }}-win-x64/*
+          -DestinationPath artifacts/MotionStabilizer-v${{ steps.metadata.outputs.version }}-win-x64.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MotionStabilizer-v1.5.0-win-x64
-          path: artifacts/MotionStabilizer-v1.5.0-win-x64.zip
+          name: MotionStabilizer-v${{ steps.metadata.outputs.version }}-win-x64
+          path: artifacts/MotionStabilizer-v${{ steps.metadata.outputs.version }}-win-x64.zip
           if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: steps.metadata.outputs.release_tag != ''
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.metadata.outputs.release_tag }}
+          PACKAGE_VERSION: ${{ steps.metadata.outputs.version }}
+        run: |
+          gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $env:RELEASE_TAG `
+              --repo $env:GITHUB_REPOSITORY `
+              --verify-tag `
+              --title "MotionStabilizer $env:RELEASE_TAG" `
+              --notes-file CHANGELOG.md
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+          }
+          gh release upload $env:RELEASE_TAG `
+            "artifacts/MotionStabilizer-v$env:PACKAGE_VERSION-win-x64.zip" `
+            --repo $env:GITHUB_REPOSITORY `
+            --clobber
+          exit $LASTEXITCODE
