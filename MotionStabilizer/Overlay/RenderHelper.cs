@@ -33,6 +33,19 @@ public static class RenderHelper
     public static double OverlayTotalWidth(SizePreset s, OffsetLevel len) =>
         OverlayBarWidth(s) + LengthOffsetPx(len);
 
+    /// <summary>Diameter of each dynamic motion cue dot in device-independent pixels.</summary>
+    public static double MotionDotDiameter(SizePreset s) => s switch
+    {
+        SizePreset.XXS => 4,
+        SizePreset.XS => 6,
+        SizePreset.S => 9,
+        SizePreset.M => 13,
+        SizePreset.L => 17,
+        SizePreset.XL => 23,
+        SizePreset.XXL => 30,
+        _ => 13
+    };
+
     /// <summary>Length offset in px.</summary>
     public static double LengthOffsetPx(OffsetLevel l) => l switch
     {

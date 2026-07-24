@@ -29,6 +29,16 @@ public class OverlayConfig
     public int EdgeLeftOpacity { get; set; } = 60;
     public int EdgeRightOpacity { get; set; } = 60;
 
+    // Dynamic motion cue settings. These are used when Shape is MotionDots.
+    public bool MotionAdaptiveColor { get; set; } = true;
+    public int MotionDotCount { get; set; } = 6;
+    public double MotionSensitivity { get; set; } = 0.8;
+    public int MotionMaxOffset { get; set; } = 56;
+    public int MotionSmoothingMs { get; set; } = 90;
+    public int MotionReturnMs { get; set; } = 260;
+    public bool MotionInvertY { get; set; } = false;
+    public int MotionRefreshRate { get; set; } = 240;
+
     /// <summary>Returns the actual Color based on preset or custom value.</summary>
     public Color GetColor()
     {

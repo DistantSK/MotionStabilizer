@@ -43,6 +43,7 @@
     <sys:String x:Key="Shape_Box">Box</sys:String>
     <sys:String x:Key="Shape_Dome">Dome</sys:String>
     <sys:String x:Key="Shape_Flag">Flag</sys:String>
+    <sys:String x:Key="Shape_MotionDots">Motion Dots</sys:String>
     <sys:String x:Key="Shape_Circle">Circle</sys:String>
     <sys:String x:Key="Shape_Cross">Cross</sys:String>
     <sys:String x:Key="Shape_Diamond">Diamond</sys:String>
@@ -80,6 +81,14 @@
     <sys:String x:Key="OpacityMode">Opacity Mode</sys:String>
     <sys:String x:Key="OpacityMode_Uniform">Uniform</sys:String>
     <sys:String x:Key="OpacityMode_PerEdge">Per Edge</sys:String>
+    <sys:String x:Key="Motion_SettingsCard">Dynamic Motion Cues</sys:String>
+    <sys:String x:Key="Motion_Desc">Random-size dots cover the screen outside the central safe area, follow the mouse, and recycle with smooth fades.</sys:String>
+    <sys:String x:Key="Motion_DotCount">Dot density</sys:String>
+    <sys:String x:Key="Motion_Sensitivity">Sensitivity</sys:String>
+    <sys:String x:Key="Motion_MaxOffset">Max travel</sys:String>
+    <sys:String x:Key="Motion_RefreshRate">Refresh rate</sys:String>
+    <sys:String x:Key="Motion_AdaptiveColor">Adaptive high-contrast color</sys:String>
+    <sys:String x:Key="Motion_InvertY">Invert Y movement</sys:String>
 
     <!-- Crosshair Page -->
     <sys:String x:Key="Crosshair_Title">Crosshair</sys:String>

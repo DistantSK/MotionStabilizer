@@ -1,0 +1,49 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Windows Release
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore MotionStabilizer/MotionStabilizer.csproj
+
+      - name: Build
+        run: dotnet build MotionStabilizer/MotionStabilizer.csproj --configuration Release --no-restore
+
+      - name: Publish self-contained app
+        run: >-
+          dotnet publish MotionStabilizer/MotionStabilizer.csproj
+          --configuration Release
+          --runtime win-x64
+          --self-contained true
+          --output artifacts/MotionStabilizer-v1.5.0-win-x64
+
+      - name: Create ZIP
+        shell: pwsh
+        run: Compress-Archive -Path artifacts/MotionStabilizer-v1.5.0-win-x64/* -DestinationPath artifacts/MotionStabilizer-v1.5.0-win-x64.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MotionStabilizer-v1.5.0-win-x64
+          path: artifacts/MotionStabilizer-v1.5.0-win-x64.zip
+          if-no-files-found: error

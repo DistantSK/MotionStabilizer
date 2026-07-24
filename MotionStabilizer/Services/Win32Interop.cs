@@ -202,4 +202,144 @@ internal static class Win32Interop
     public const int VK_ESCAPE = 0x1B;
 
     #endregion
+
+    #region Raw Mouse Input
+
+    public const int WM_INPUT = 0x00FF;
+    public const uint RID_INPUT = 0x10000003;
+    public const uint RIM_TYPEMOUSE = 0;
+    public const uint RIDEV_INPUTSINK = 0x00000100;
+    public const ushort MOUSE_MOVE_ABSOLUTE = 0x0001;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RAWINPUTDEVICE
+    {
+        public ushort UsagePage;
+        public ushort Usage;
+        public uint Flags;
+        public IntPtr Target;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RAWINPUTHEADER
+    {
+        public uint Type;
+        public uint Size;
+        public IntPtr Device;
+        public IntPtr WParam;
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    public struct RAWMOUSE
+    {
+        [FieldOffset(0)] public ushort Flags;
+        [FieldOffset(4)] public uint Buttons;
+        [FieldOffset(8)] public uint RawButtons;
+        [FieldOffset(12)] public int LastX;
+        [FieldOffset(16)] public int LastY;
+        [FieldOffset(20)] public uint ExtraInformation;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RAWINPUT
+    {
+        public RAWINPUTHEADER Header;
+        public RAWMOUSE Mouse;
+    }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool RegisterRawInputDevices(
+        [In] RAWINPUTDEVICE[] devices,
+        uint numberDevices,
+        uint size);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern uint GetRawInputData(
+        IntPtr rawInput,
+        uint command,
+        out RAWINPUT data,
+        ref uint size,
+        uint headerSize);
+
+    public static bool RegisterRawMouseInput(IntPtr target)
+    {
+        var devices = new[]
+        {
+            new RAWINPUTDEVICE
+            {
+                UsagePage = 0x01,
+                Usage = 0x02,
+                Flags = RIDEV_INPUTSINK,
+                Target = target
+            }
+        };
+
+        return RegisterRawInputDevices(
+            devices,
+            1,
+            (uint)Marshal.SizeOf<RAWINPUTDEVICE>());
+    }
+
+    public static bool TryGetRawMouseDelta(IntPtr lParam, out int deltaX, out int deltaY)
+    {
+        deltaX = 0;
+        deltaY = 0;
+
+        uint size = (uint)Marshal.SizeOf<RAWINPUT>();
+        uint headerSize = (uint)Marshal.SizeOf<RAWINPUTHEADER>();
+        uint copied = GetRawInputData(lParam, RID_INPUT, out var input, ref size, headerSize);
+        if (copied == uint.MaxValue || copied == 0)
+            return false;
+
+        if (input.Header.Type != RIM_TYPEMOUSE ||
+            (input.Mouse.Flags & MOUSE_MOVE_ABSOLUTE) != 0)
+            return false;
+
+        deltaX = input.Mouse.LastX;
+        deltaY = input.Mouse.LastY;
+        return deltaX != 0 || deltaY != 0;
+    }
+
+    #endregion
+
+    #region Screen Sampling
+
+    public const uint CLR_INVALID = 0xFFFFFFFF;
+
+    [DllImport("gdi32.dll")]
+    public static extern uint GetPixel(IntPtr hdc, int x, int y);
+
+    public static (byte R, byte G, byte B)?[] SampleScreenColors(
+        IReadOnlyList<(int X, int Y)> points)
+    {
+        var results = new (byte R, byte G, byte B)?[points.Count];
+        IntPtr screenDc = GetDC(IntPtr.Zero);
+        if (screenDc == IntPtr.Zero)
+            return results;
+
+        try
+        {
+            for (int index = 0; index < points.Count; index++)
+            {
+                var point = points[index];
+                uint pixel = GetPixel(screenDc, point.X, point.Y);
+                if (pixel == CLR_INVALID)
+                    continue;
+
+                results[index] = (
+                    (byte)(pixel & 0xFF),
+                    (byte)((pixel >> 8) & 0xFF),
+                    (byte)((pixel >> 16) & 0xFF));
+            }
+
+            return results;
+        }
+        finally
+        {
+            ReleaseDC(IntPtr.Zero, screenDc);
+        }
+    }
+
+    #endregion
 }

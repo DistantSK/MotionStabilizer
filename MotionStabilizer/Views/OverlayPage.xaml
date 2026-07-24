@@ -56,7 +56,7 @@
                             </StackPanel>
                         </Button>
                         <!-- Flag: four inward-pointing triangles -->
-                        <Button x:Name="BtnShapeFlag" Style="{StaticResource ShapeButton}"
+                        <Button x:Name="BtnShapeFlag" Style="{StaticResource ShapeButton}" Margin="0,0,12,0"
                                 Click="Shape_Click">
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Path Stroke="{StaticResource BrushTextSecondary}" StrokeThickness="1.5" Fill="{StaticResource BrushTextSecondary}"
@@ -69,6 +69,69 @@
                                            HorizontalAlignment="Center" Margin="0,6,0,0" />
                             </StackPanel>
                         </Button>
+                        <!-- Motion dots: perimeter cues driven by relative mouse movement -->
+                        <Button x:Name="BtnShapeMotion" Style="{StaticResource ShapeButton}"
+                                Click="Shape_Click">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="●  ·  ●" FontSize="18" Foreground="{StaticResource BrushTextSecondary}"
+                                           HorizontalAlignment="Center" Opacity="0.65" />
+                                <TextBlock Text="{DynamicResource Shape_MotionDots}" FontSize="11"
+                                           Foreground="{StaticResource BrushTextSecondary}"
+                                           HorizontalAlignment="Center" Margin="0,6,0,0" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Dynamic motion cue settings -->
+            <Border x:Name="PanelMotionSettings" Style="{StaticResource SettingsCard}" Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="{DynamicResource Motion_SettingsCard}" Style="{StaticResource CardTitle}" />
+                    <TextBlock Text="{DynamicResource Motion_Desc}" Foreground="{StaticResource BrushTextSecondary}"
+                               FontSize="12" TextWrapping="Wrap" Margin="0,0,0,16" />
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                        <TextBlock Text="{DynamicResource Motion_DotCount}" Style="{StaticResource FieldLabel}" Width="100" />
+                        <Slider x:Name="SliderMotionDotCount" Width="280" Minimum="3" Maximum="12"
+                                TickFrequency="1" IsSnapToTickEnabled="True"
+                                ValueChanged="MotionDotCount_Changed" />
+                        <TextBlock x:Name="MotionDotCountLabel" Width="40" Margin="12,0,0,0"
+                                   VerticalAlignment="Center" Foreground="{StaticResource BrushTextPrimary}" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                        <TextBlock Text="{DynamicResource Motion_Sensitivity}" Style="{StaticResource FieldLabel}" Width="100" />
+                        <Slider x:Name="SliderMotionSensitivity" Width="280" Minimum="0.1" Maximum="2.0"
+                                TickFrequency="0.1" ValueChanged="MotionSensitivity_Changed" />
+                        <TextBlock x:Name="MotionSensitivityLabel" Width="48" Margin="12,0,0,0"
+                                   VerticalAlignment="Center" Foreground="{StaticResource BrushTextPrimary}" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                        <TextBlock Text="{DynamicResource Motion_MaxOffset}" Style="{StaticResource FieldLabel}" Width="100" />
+                        <Slider x:Name="SliderMotionMaxOffset" Width="280" Minimum="8" Maximum="160"
+                                TickFrequency="4" IsSnapToTickEnabled="True"
+                                ValueChanged="MotionMaxOffset_Changed" />
+                        <TextBlock x:Name="MotionMaxOffsetLabel" Width="56" Margin="12,0,0,0"
+                                   VerticalAlignment="Center" Foreground="{StaticResource BrushTextPrimary}" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                        <TextBlock Text="{DynamicResource Motion_RefreshRate}" Style="{StaticResource FieldLabel}" Width="100" />
+                        <Slider x:Name="SliderMotionRefreshRate" Width="280" Minimum="30" Maximum="360"
+                                TickFrequency="1" IsSnapToTickEnabled="True"
+                                ValueChanged="MotionRefreshRate_Changed" />
+                        <TextBlock x:Name="MotionRefreshRateLabel" Width="64" Margin="12,0,0,0"
+                                   VerticalAlignment="Center" Foreground="{StaticResource BrushTextPrimary}" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox x:Name="ChkMotionAdaptiveColor" Content="{DynamicResource Motion_AdaptiveColor}"
+                                  Margin="0,0,24,0"
+                                  Checked="MotionAdaptiveColor_Changed" Unchecked="MotionAdaptiveColor_Changed" />
+                        <CheckBox x:Name="ChkMotionInvertY" Content="{DynamicResource Motion_InvertY}"
+                                  Checked="MotionInvertY_Changed" Unchecked="MotionInvertY_Changed" />
                     </StackPanel>
                 </StackPanel>
             </Border>

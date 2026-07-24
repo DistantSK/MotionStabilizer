@@ -31,6 +31,21 @@ public partial class OverlayPage : Page
 
         // Shape buttons
         UpdateShapeSelection(cfg.Shape);
+        PanelMotionSettings.Visibility = cfg.Shape == OverlayShape.MotionDots
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        // Dynamic motion cue settings
+        SliderMotionDotCount.Value = cfg.MotionDotCount;
+        MotionDotCountLabel.Text = cfg.MotionDotCount.ToString();
+        SliderMotionSensitivity.Value = cfg.MotionSensitivity;
+        MotionSensitivityLabel.Text = cfg.MotionSensitivity.ToString("0.0") + "x";
+        SliderMotionMaxOffset.Value = cfg.MotionMaxOffset;
+        MotionMaxOffsetLabel.Text = cfg.MotionMaxOffset + " px";
+        SliderMotionRefreshRate.Value = Math.Clamp(cfg.MotionRefreshRate, 30, 360);
+        MotionRefreshRateLabel.Text = Math.Clamp(cfg.MotionRefreshRate, 30, 360) + " Hz";
+        ChkMotionAdaptiveColor.IsChecked = cfg.MotionAdaptiveColor;
+        ChkMotionInvertY.IsChecked = cfg.MotionInvertY;
 
         // Aspect ratio
         CbAspectRatio.SelectedIndex = (int)cfg.AspectRatio;
@@ -92,6 +107,7 @@ public partial class OverlayPage : Page
         BtnShapeBox.Tag = shape == OverlayShape.Box ? "Selected" : "";
         BtnShapeDome.Tag = shape == OverlayShape.Dome ? "Selected" : "";
         BtnShapeFlag.Tag = shape == OverlayShape.Flag ? "Selected" : "";
+        BtnShapeMotion.Tag = shape == OverlayShape.MotionDots ? "Selected" : "";
     }
 
     private void UpdateColorSelection(ColorPreset color)
@@ -122,7 +138,57 @@ public partial class OverlayPage : Page
         if (sender == BtnShapeBox) App.OverlayConfig.Shape = OverlayShape.Box;
         else if (sender == BtnShapeDome) App.OverlayConfig.Shape = OverlayShape.Dome;
         else if (sender == BtnShapeFlag) App.OverlayConfig.Shape = OverlayShape.Flag;
+        else if (sender == BtnShapeMotion) App.OverlayConfig.Shape = OverlayShape.MotionDots;
         UpdateShapeSelection(App.OverlayConfig.Shape);
+        PanelMotionSettings.Visibility = App.OverlayConfig.Shape == OverlayShape.MotionDots
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        App.RefreshOverlay();
+    }
+
+    private void MotionDotCount_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading || MotionDotCountLabel == null) return;
+        App.OverlayConfig.MotionDotCount = (int)SliderMotionDotCount.Value;
+        MotionDotCountLabel.Text = App.OverlayConfig.MotionDotCount.ToString();
+        App.RefreshOverlay();
+    }
+
+    private void MotionSensitivity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading || MotionSensitivityLabel == null) return;
+        App.OverlayConfig.MotionSensitivity = Math.Round(SliderMotionSensitivity.Value, 1);
+        MotionSensitivityLabel.Text = App.OverlayConfig.MotionSensitivity.ToString("0.0") + "x";
+        App.RefreshOverlay();
+    }
+
+    private void MotionMaxOffset_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading || MotionMaxOffsetLabel == null) return;
+        App.OverlayConfig.MotionMaxOffset = (int)SliderMotionMaxOffset.Value;
+        MotionMaxOffsetLabel.Text = App.OverlayConfig.MotionMaxOffset + " px";
+        App.RefreshOverlay();
+    }
+
+    private void MotionRefreshRate_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading || MotionRefreshRateLabel == null) return;
+        App.OverlayConfig.MotionRefreshRate = (int)SliderMotionRefreshRate.Value;
+        MotionRefreshRateLabel.Text = App.OverlayConfig.MotionRefreshRate + " Hz";
+        App.RefreshOverlay();
+    }
+
+    private void MotionAdaptiveColor_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isLoading) return;
+        App.OverlayConfig.MotionAdaptiveColor = ChkMotionAdaptiveColor.IsChecked == true;
+        App.RefreshOverlay();
+    }
+
+    private void MotionInvertY_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isLoading) return;
+        App.OverlayConfig.MotionInvertY = ChkMotionInvertY.IsChecked == true;
         App.RefreshOverlay();
     }
 
