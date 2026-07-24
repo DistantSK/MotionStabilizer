@@ -25,7 +25,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.release_tag || github.ref }}
+          ref: ${{ github.ref }}
 
       - name: Set up .NET 8
         uses: actions/setup-dotnet@v4
@@ -97,7 +97,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             gh release create $env:RELEASE_TAG `
               --repo $env:GITHUB_REPOSITORY `
-              --verify-tag `
+              --target $env:GITHUB_SHA `
               --title "MotionStabilizer $env:RELEASE_TAG" `
               --notes-file CHANGELOG.md
             if ($LASTEXITCODE -ne 0) {
